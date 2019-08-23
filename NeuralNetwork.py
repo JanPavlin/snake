@@ -25,7 +25,6 @@ if __name__ == '__main__':
     network = NeuralNetwork(3)
     print(network)
 
-    weights[0][2] = .2
 
 
     print(weights)

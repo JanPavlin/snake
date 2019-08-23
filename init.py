@@ -14,8 +14,6 @@ class Snake:
         self.tail.append(self.starting_location)
         self.alive = True
 
-
-
     def move(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -35,10 +33,21 @@ class Snake:
 
                 elif keys[pygame.K_DOWN]:
                     self.direction = 3
-
-
         if self.direction == 0:
             self.tail.insert(0, (self.tail[0][0], self.tail[0][1]+1))
+        elif self.direction == 1:
+            self.tail.insert(0, (self.tail[0][0] - 1, self.tail[0][1]))
+        elif self.direction == 2:
+            self.tail.insert(0, (self.tail[0][0], self.tail[0][1] - 1))
+        elif self.direction == 3:
+            self.tail.insert(0, (self.tail[0][0] + 1, self.tail[0][1]))
+        self.tail.pop()
+
+
+    def move_bot(self):
+
+        if self.direction == 0:
+            self.tail.insert(0, (self.tail[0][0], self.tail[0][1] + 1))
         elif self.direction == 1:
             self.tail.insert(0, (self.tail[0][0] - 1, self.tail[0][1]))
         elif self.direction == 2:
@@ -213,10 +222,27 @@ def play(size, dim, child, player='Bot',):
         print("_____________________")
         while snake.alive:
             avilable_moves -= 1
+            print(sum(world.area, []))
+            import numpy as np
+            prediction_input = []
+            for el in sum(world.area, []):
+                prediction_input.append(el)
+
+            prediction_input = np.array(prediction_input).transpose()
+            if (prediction_input.ndim == 1):
+                print("treba")
+                prediction_input = np.array([prediction_input])
+
+
+            predicted = child.network.model.predict(prediction_input)[0]
+            smer = np.argmax(predicted)
+            print(predicted)
+            print(smer)
+            snake.direction = smer
 
             print_snake(world, snake)
             snake.endgame_check(world.size, avilable_moves)
-
+            snake.move_bot()
             if snake.check_if_apple_eaten(world.apple):
                 snake.add_tail()
                 world.spawn_apple(snake)

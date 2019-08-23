@@ -6,10 +6,10 @@ class Child:
     id = 0
     batch = 0
 
-    def __init__(self, batch, ids):
+    def __init__(self, batch, ids,rows):
         self.batch = batch
         self.id = ids
-        self.network = NN.NeuralNetwork(20)
+        self.network = NN.NeuralNetwork(rows)
 
 
 class GeneticAlgorythm:
@@ -25,7 +25,7 @@ class GeneticAlgorythm:
         self.children_num = children
         self.map_size = (rows, width)
         for i in range(self.children_num):
-            self.children.append(Child(self.batch, self.id_count))
+            self.children.append(Child(self.batch, self.id_count, rows))
             self.id_count += 1
 
     def learn(self):
