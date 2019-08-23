@@ -1,5 +1,6 @@
 #import Snake
 #import World
+import GeneticAlgorythm
 class Snake:
     size = 1
     tail = []
@@ -8,8 +9,10 @@ class Snake:
     direction = 0
 
     def __init__(self):
-        new_snake = Snake
-        new_snake.tail.append(new_snake.starting_location)
+        self.tail = []
+        self.size = 0
+        self.tail.append(self.starting_location)
+        self.alive = True
 
 
 
@@ -45,11 +48,13 @@ class Snake:
         self.tail.pop()
 
 
-    def endgame_check(self, size):
+    def endgame_check(self, size, moves):
+
         head = self.tail[0]
         rest_tail = self.tail[1:]
 
-        if head in rest_tail or head[0] == -1 or head[0] == size or head[1] == -1 or head[1] == size:
+        if head in rest_tail or head[0] == -1 or head[0] == size or\
+                head[1] == -1 or head[1] == size or moves < 1:
             print("DED")
             self.alive = False
 
@@ -88,16 +93,20 @@ class Snake:
 import random
 
 class World:
-    size = 50
-    width = 800
+    size = 0
+    width = 0
     area = []
     score = 0
     apple = (3, 3)
 
-    def __init__(self):
-        world = World
-        for _ in range(world.size):
-            world.area.append([0 for _ in range(world.size)])
+    def __init__(self, size, width):
+        self.size = size
+        self.width = width
+        self.area = []
+        self.score = 0
+
+        for _ in range(self.size):
+            self.area.append([0 for _ in range(self.size)])
         '''for i in range(world.size):
             world.area[0][i] = 2
             world.area[i][0] = 2
@@ -112,7 +121,7 @@ class World:
     def spawn_apple(self, snake):
         found_place = False
         while not found_place:
-            x,y = random.randrange(1, World.size-1), random.randrange(1, World.size-1)
+            x,y = random.randrange(1, self.size-1), random.randrange(1, self.size-1)
             if (x,y) not in snake.tail:
                 found_place = True
                 self.apple = (x, y)
@@ -176,40 +185,76 @@ def redrawWindow(surface, snake, world):
 
 # import pygame
 # import time
-if __name__ == '__main__':
 
+def play(size, dim, child, player='Bot',):
     print("Starting snake")
-    world = World()
+    world = None
+    world = World(size, dim)
     snake = Snake()
-
+    print("WORLD:")
+    print(world.size)
+    print(world.width)
+    print(world.apple)
     print("snake.len = ", snake.size)
     global rows, width
-    width = world.width
-    rows = world.size
+    width = dim
+    rows = size
 
     print_snake(world, snake)
     score = 0
     moves = 0
+    avilable_moves = 5
     win = pygame.display.set_mode((width, width))
     clock = pygame.time.Clock()
-    while snake.alive:
-        print_snake(world, snake)
-        draw_snake(world, snake, win)
-        pygame.time.delay(100)
-        clock.tick(100)
-        moves += 1
-        # DO MAGIC
-        snake.move()
-        snake.endgame_check(world.size)
-        if snake.check_if_apple_eaten(world.apple):
-            snake.add_tail()
-            world.spawn_apple(snake)
+    if player == 'Bot':
+        print("_____________________-----------------------------------")
+        print("_____________________")
+        print("________", child.batch, "\\", child.id, "________")
+        print("_____________________")
+        while snake.alive:
+            avilable_moves -= 1
+
+            print_snake(world, snake)
+            snake.endgame_check(world.size, avilable_moves)
+
+            if snake.check_if_apple_eaten(world.apple):
+                snake.add_tail()
+                world.spawn_apple(snake)
+                score += 100
+                avilable_moves += 100
             score += 1
+            moves += 1
+
+    if player == 'Human':
+        print("????????????????????????????????????????????????????????????????")
+        if player == 'Human':
+            while snake.alive:
+                # print_snake(world, snake)
+                draw_snake(world, snake, win)
+                pygame.time.delay(100)
+                clock.tick(150)
+                snake.move()
+                snake.endgame_check(world.size, avilable_moves)
+
+                if snake.check_if_apple_eaten(world.apple):
+                    snake.add_tail()
+                    world.spawn_apple(snake)
+                    score += 100
+                    avilable_moves += 100
+                score += 1
+
+
+        # DO MAGIC
+
 
         # snake.endgame_check(world)
     print("Snake died after ", moves, "moves.")
     print("Total score was ", score, "points.")
+    print("Number of aviable movements is ", avilable_moves, ".")
 
+
+if __name__ == '__main__':
+    play(20,800,None, player='Human')
 
 
 
