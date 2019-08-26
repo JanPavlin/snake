@@ -48,25 +48,47 @@ class Snake:
 
         if self.direction == 0:
             self.tail.insert(0, (self.tail[0][0], self.tail[0][1] + 1))
+            #print("desno")
         elif self.direction == 1:
             self.tail.insert(0, (self.tail[0][0] - 1, self.tail[0][1]))
+            #print("gor")
         elif self.direction == 2:
             self.tail.insert(0, (self.tail[0][0], self.tail[0][1] - 1))
+            #print("levo")
         elif self.direction == 3:
             self.tail.insert(0, (self.tail[0][0] + 1, self.tail[0][1]))
+            #print("dol")
         self.tail.pop()
 
 
-    def endgame_check(self, size, moves):
+    def endgame_check(self, size, moves, eaten):
 
         head = self.tail[0]
         rest_tail = self.tail[1:]
+        smer = self.direction
 
-        if head in rest_tail or head[0] == -1 or head[0] == size or\
+        '''if head in rest_tail or head[0] == -1 or head[0] == size or\
                 head[1] == -1 or head[1] == size or moves < 1:
             print("DED")
+            '''
+        if head in rest_tail and  not eaten:
+            print("sama_vase -- DEAD")
             self.alive = False
-
+        elif moves < 1:
+            print("brez premikov -- DED")
+            self.alive = False
+        elif head[0] == size-1 and smer == 3:
+            print("hit tho bottom -- DEAD")
+            self.alive = False
+        elif head[0] == 0 and smer == 1:
+            print("hit the top -- DED")
+            self.alive = False
+        elif head[1] == size-1 and smer == 0:
+            print("hit the right -- DEAD")
+            self.alive = False
+        elif head[1] == 0 and smer == 2:
+            print("hit the left -- DED")
+            self.alive = False
 
     def check_if_apple_eaten(self, apple):
         head = self.tail[0]
@@ -147,12 +169,18 @@ class World:
         pygame.draw.rect(surface, color, (i * dis + 1, j * dis + 1, dis - 2, dis - 2))
 
 
-def print_snake(world, snake):
+def print_snake(world, snake, printable):
+    world.area = []
+    for _ in range(world.size):
+        world.area.append([0 for _ in range(world.size)])
+    new_area = world.area
     for tail_part in snake.tail:
-        world.area[tail_part[0]][tail_part[1]] = 1
-    world.area[world.apple[0]][world.apple[1]] = 3
-    for i in range(len(world.area)):
-        print(world.area[i])
+        new_area[tail_part[0]][tail_part[1]] = 1
+    new_area[world.apple[0]][world.apple[1]] = 3
+    if printable > 1:
+        for i in range(len(new_area)):
+            print(new_area[i])
+
     print("")
     print("_______________________________")
     print("_______________________________")
@@ -209,20 +237,24 @@ def play(size, dim, child, player='Bot',):
     width = dim
     rows = size
 
-    print_snake(world, snake)
+    #print_snake(world, snake)
     score = 0
     moves = 0
-    avilable_moves = 5
+    avilable_moves = 25
     win = pygame.display.set_mode((width, width))
     clock = pygame.time.Clock()
+    printable = 1
+    eaten = False
     if player == 'Bot':
-        print("_____________________-----------------------------------")
-        print("_____________________")
-        print("________", child.batch, "\\", child.id, "________")
-        print("_____________________")
+        if printable > 1:
+            print("_____________________-----------------------------------")
+            print("_____________________")
+
+            print("_____________________")
+        print("______", child.batch, "\\", child.id, "________")
         while snake.alive:
             avilable_moves -= 1
-            print(sum(world.area, []))
+
             import numpy as np
             prediction_input = []
             for el in sum(world.area, []):
@@ -230,26 +262,34 @@ def play(size, dim, child, player='Bot',):
 
             prediction_input = np.array(prediction_input).transpose()
             if (prediction_input.ndim == 1):
-                print("treba")
                 prediction_input = np.array([prediction_input])
-
-
             predicted = child.network.model.predict(prediction_input)[0]
-            smer = np.argmax(predicted)
+            print(prediction_input)
             print(predicted)
-            print(smer)
+            smer = np.argmax(predicted)
             snake.direction = smer
+            print(snake.tail, smer)
+            snake.endgame_check(world.size, avilable_moves, eaten)
+            moves += 1
+            if not snake.alive:
+                break
 
-            print_snake(world, snake)
-            snake.endgame_check(world.size, avilable_moves)
+
             snake.move_bot()
+
+
             if snake.check_if_apple_eaten(world.apple):
                 snake.add_tail()
                 world.spawn_apple(snake)
                 score += 100
-                avilable_moves += 100
+                avilable_moves += 50
+                eaten = True
+            else:
+                eaten = False
+
+            print_snake(world, snake, printable)
             score += 1
-            moves += 1
+
 
     if player == 'Human':
         print("????????????????????????????????????????????????????????????????")
@@ -278,7 +318,7 @@ def play(size, dim, child, player='Bot',):
     print("Total score was ", score, "points.")
     print("Number of aviable movements is ", avilable_moves, ".")
 
-
+    return score
 if __name__ == '__main__':
     play(20,800,None, player='Human')
 
