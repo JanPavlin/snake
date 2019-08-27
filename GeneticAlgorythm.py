@@ -12,6 +12,10 @@ class Child:
         self.network = NN.NeuralNetwork(rows)
 
 
+    def edit_NN(self):
+        pass
+
+
 class GeneticAlgorythm:
     children_num = 3
     children = []
@@ -20,13 +24,22 @@ class GeneticAlgorythm:
     id_count = 0
     map_size = (0, 0)
     max_depth = 2
+    rows = 0
 
     def __init__(self, children, rows, width):
         self.children_num = children
         self.map_size = (rows, width)
+        self.rows = rows
         for i in range(self.children_num):
             self.children.append(Child(self.batch, self.id_count, rows))
             self.id_count += 1
+
+    def get_parent(self, parent):
+        for child in self.children:
+            if child.id == parent:
+                return child
+        print("error_get_parrent")
+
 
     def learn(self):
 
@@ -46,13 +59,19 @@ class GeneticAlgorythm:
                     potomci_list.append(score[0])
 
             import random
-
+            self.batch += 1
             print(potomci_list)
             for i in range(self.children_num):
                 new_kiddo = random.choice(potomci_list)
                 print(new_kiddo)
                 # TODO: za vsakega otroka pridobi network njegovega prednika
+
+                child = self.children.append(Child(self.batch, self.id_count, self.rows))
+                parent = self.get_parent(new_kiddo)
+                child.edit_NN(parent)
                 # TODO: za vsako mrežo od otrok spremeni uteži.
+                    # kako?
+
 
 
 
